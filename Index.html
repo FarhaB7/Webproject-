@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Advanced Medicine Reminder</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: linear-gradient(to right,#11998e,#38ef7d);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.container {
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    width:400px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+
+h2 { text-align:center; }
+
+input, select, button {
+    width:100%;
+    padding:8px;
+    margin:6px 0;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+
+button {
+    background:#11998e;
+    color:white;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover {
+    background:#0f7f75;
+}
+
+ul { list-style:none; padding:0; }
+
+li {
+    background:#f2f2f2;
+    margin:5px 0;
+    padding:8px;
+    border-radius:5px;
+    font-size:14px;
+}
+.delete {
+    background:red;
+    color:white;
+    border:none;
+    padding:3px 6px;
+    cursor:pointer;
+    border-radius:4px;
+    float:right;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+<h2>💊 Medicine Reminder</h2>
+
+<input type="text" id="medicineName" placeholder="Medicine Name">
+
+<!-- ✅ Added Dose Field -->
+<input type="text" id="dose" placeholder="Dose (e.g., 1 Tablet / 5ml / 2 Capsules)">
+
+<input type="date" id="medicineDate">
+
+<input type="time" id="medicineTime">
+
+<select id="frequency">
+    <option value="daily">Daily</option>
+    <option value="weekly">Weekly</option>
+    <option value="monthly">Monthly</option>
+</select>
+
+<select id="mealTime">
+    <option value="Before Breakfast">Before Breakfast</option>
+    <option value="After Breakfast">After Breakfast</option>
+    <option value="After Lunch">After Lunch</option>
+    <option value="After Dinner">After Dinner</option>
+</select>
+
+<button onclick="addReminder()">Add Reminder</button>
+
+<ul id="reminderList"></ul>
+</div>
+
+<audio id="alarmSound">
+<source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3">
+</audio>
+
+<script>
+
+let reminders = JSON.parse(localStorage.getItem("medicineData")) || [];
+
+function saveData(){
+    localStorage.setItem("medicineData", JSON.stringify(reminders));
+}
+
+function addReminder(){
+    const name = document.getElementById("medicineName").value;
+    const dose = document.getElementById("dose").value;  // ✅ Added
+    const date = document.getElementById("medicineDate").value;
+    const time = document.getElementById("medicineTime").value;
+    const frequency = document.getElementById("frequency").value;
+    const meal = document.getElementById("mealTime").value;
+
+    if(!name || !dose || !date || !time){
+        alert("Please fill all fields");
+        return;
+    }
+
+    reminders.push({name,dose,date,time,frequency,meal});
+    saveData();
+    displayReminders();
+
+    document.getElementById("medicineName").value="";
+    document.getElementById("dose").value="";
+}
+
+function displayReminders(){
+    const list = document.getElementById("reminderList");
+    list.innerHTML="";
+
+    reminders.forEach((r,index)=>{
+        const li=document.createElement("li");
+        li.innerHTML=`
+        <b>${r.name}</b><br>
+        💊 Dose: ${r.dose}<br>
+        Date: ${r.date}<br>
+        Time: ${r.time}<br>
+        ${r.frequency} | ${r.meal}
+        <button class="delete" onclick="deleteReminder(${index})">X</button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+function deleteReminder(index){
+    reminders.splice(index,1);
+    saveData();
+    displayReminders();
+}
+
+// Reminder Checker
+setInterval(()=>{
+    const now=new Date();
+    const currentDate=now.toISOString().split("T")[0];
+    const currentTime=now.toTimeString().slice(0,5);
+
+    reminders.forEach(r=>{
+        if(r.date===currentDate && r.time===currentTime){
+            document.getElementById("alarmSound").play();
+            alert("⏰ Take "+r.dose+" of "+r.name+" ("+r.meal+")");
+        }
+    });
+},1000);
+
+displayReminders();
+
+</script>
+
+</body>
+</html>
